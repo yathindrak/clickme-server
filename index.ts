@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import authRouter from './routes/auth'
 import { ClickMeException } from './utils/exception';
 import { generateApiKey } from './service/auth';
+import router from './routes/routes';
 
 dotenv.config();
 
@@ -34,7 +35,7 @@ app.get('/', middleware1, (req: Request, res: Response) => {
   res.send('API server');
 });
 
-app.use("/auth", authRouter);
+app.use("/api", router);
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
