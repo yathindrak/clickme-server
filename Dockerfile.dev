@@ -1,0 +1,16 @@
+FROM node:16
+
+# Create app directory
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+COPY tsconfig.json ./
+
+# Copy source into image
+COPY . .
+RUN ls -a
+
+RUN yarn --frozen-lockfile
+
+EXPOSE 8080
+CMD ["yarn","dev"]

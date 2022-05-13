@@ -2,13 +2,12 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import authRouter from './routes/auth'
 import { ClickMeException } from './utils/exception';
-import { generateApiKey } from './service/auth';
 import router from './routes/routes';
 
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 8080;
 
 // parse JSON bodies
 app.use(express.json());
