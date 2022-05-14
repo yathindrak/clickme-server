@@ -1,11 +1,11 @@
-export class ClickMeException {
-    public code: string;
-    public name: string;
-    public message: string;
+export class ClickMeException extends Error {
+  public message: string;
+  public status?: number;
 
-    public constructor(code: string, name: string, message: string) {
-        this.code = code;
-        this.name = name;
-        this.message = message;
-    }
+  public constructor(message: string, status?: number) {
+    super(message);
+    this.message = message;
+    this.status = status;
+    Object.setPrototypeOf(this, ClickMeException.prototype);
+  }
 }
