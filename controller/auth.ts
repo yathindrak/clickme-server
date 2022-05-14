@@ -9,6 +9,17 @@ import { sendVerificationEmail } from "../email/sender";
 import { generateToken } from "../utils/auth";
 
 export default class authController {
+  static async signIn(req: Request, res: Response, next: NextFunction) {
+    let user = (req as any)?.user as IUser;
+    if (!user) {
+      throw new ClickMeException("Invalid user credentails");
+    }
+
+    const token = generateToken(user);
+
+    res.status(200).json({ accessToken: token });
+  }
+
   static async signUp(req: Request, res: Response, next: NextFunction) {
     let user = (req as any)?.user as IUser;
     if (!user) {
@@ -48,12 +59,12 @@ export default class authController {
     const apikey = nanoid(Number(process.env.API_KEY_LENGTH));
 
     try {
-      await userService.update((req as any).user?.id, {apikey});
+      await userService.update((req as any).user?.id, { apikey });
     } catch (error) {
       throw new ClickMeException("User registration went wrong");
     }
 
-    console.log("token generated")
+    console.log("token generated");
 
     res.status(200).json({ apikey });
   }
@@ -79,7 +90,11 @@ export default class authController {
       user.verificationExpiredAt &&
       user.verificationExpiredAt >= new Date()
     ) {
-      updatePayload = {"verified": true, "verificationCode": null, "verificationExpiredAt": null}
+      updatePayload = {
+        verified: true,
+        verificationCode: null,
+        verificationExpiredAt: null
+      };
       user.verified = true;
       user.verificationExpiredAt = undefined;
       user.verificationCode = undefined;

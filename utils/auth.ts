@@ -1,12 +1,13 @@
 import JWT from "jsonwebtoken";
 import passport from "passport";
 import { NextFunction, Request, Response } from "express";
+import bcrypt from "bcrypt";
 import {
   Strategy as JwtStrategy,
   ExtractJwt,
   VerifiedCallback
 } from "passport-jwt";
-
+import { Strategy as LocalStratergy } from "passport-local";
 import { IUser } from "../database/models/user";
 import { ClickMeException } from "./exception";
 import * as userService from "../database/services/userService";
@@ -65,6 +66,31 @@ export const initPassport = () => {
       }
     )
   );
+
+  const localOptions = {
+    usernameField: "email"
+  };
+
+  passport.use(
+    new LocalStratergy(localOptions, async (email, password, done) => {
+      let user: IUser = {} as IUser;
+      try {
+        user = await userService.getByEmail(email);
+      } catch (error) {
+        return done(error);
+      }
+
+      if (!user?.id) {
+        return done(null, false);
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return done(null, false);
+      }
+      return done(null, user);
+    })
+  );
 };
 
 export const generateToken = (user: IUser) => {
@@ -85,6 +111,30 @@ export const generateToken = (user: IUser) => {
     } as Record<string, any>,
     process.env.JWT_SECRET ?? ""
   );
+};
+
+export const verifyBasicAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  passport.authenticate("local", (err, user: IUser) => {
+    if (err) return next(err);
+
+    if (!user?.id) {
+      throw new ClickMeException("Unauthorized Request", 401);
+    }
+
+    if (!user.verified) {
+      throw new ClickMeException("Email address is not verified", 400);
+    }
+
+    if (user) {
+      req.user = user;
+      return next();
+    }
+    return next();
+  })(req, res, next);
 };
 
 export const verifyToken = (

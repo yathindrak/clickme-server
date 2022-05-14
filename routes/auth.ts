@@ -8,8 +8,16 @@ import asyncHandler from "express-async-handler";
 const router = Router();
 
 router.post(
+  "/signin",
+  validator.signIn,
+  verifier.verify,
+  asyncHandler(authUtils.verifyBasicAuth),
+  authController.signIn
+);
+
+router.post(
   "/signup",
-  validator.signup,
+  validator.signUp,
   verifier.verify,
   authController.signUp
 );
