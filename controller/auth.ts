@@ -22,7 +22,7 @@ export default class authController {
         password,
         verified: false,
         verificationCode: uuidv4(),
-        verificationExpiredAt: new Date(new Date().getTime() + 60*60*1000)
+        verificationExpiredAt: new Date(new Date().getTime() + 60 * 60 * 1000)
       };
 
       try {
@@ -37,13 +37,25 @@ export default class authController {
     return res.status(201).send({ message: "Verification link has been sent" });
   }
 
+  /**
+   * Generate and Regenerate API key
+   * @param req
+   * @param res
+   * @param next
+   */
   static async generateApiKey(req: Request, res: Response, next: NextFunction) {
     // generate API key
     const apikey = nanoid(Number(process.env.API_KEY_LENGTH));
 
-    // await service.update(id, payload);
+    try {
+      await userService.update((req as any).user?.id, {apikey});
+    } catch (error) {
+      throw new ClickMeException("User registration went wrong");
+    }
 
-    res.json({ apikey });
+    console.log("token generated")
+
+    res.status(200).json({ apikey });
   }
 
   static async verifyEmail(req: Request, res: Response, next: NextFunction) {
@@ -56,22 +68,30 @@ export default class authController {
     try {
       user = await userService.getByEmailVerificationCode(req.params.code);
     } catch (error) {
+      console.log(error);
       throw new ClickMeException("Invalid verification code", 400);
     }
 
-    if(user && user.verificationExpiredAt &&  user.verificationExpiredAt >= new Date()) {
+    let updatePayload = null;
+
+    if (
+      user &&
+      user.verificationExpiredAt &&
+      user.verificationExpiredAt >= new Date()
+    ) {
+      updatePayload = {"verified": true, "verificationCode": null, "verificationExpiredAt": null}
       user.verified = true;
-      user.verificationCode = undefined;
       user.verificationExpiredAt = undefined;
+      user.verificationCode = undefined;
     } else {
       throw new ClickMeException("Invalid verification code", 400);
     }
 
     // update user
     try {
-      user = await userService.update(user?.id, user);
+      await userService.update(user?.id, updatePayload);
     } catch (error) {
-      throw new ClickMeException("User registration went wrong");
+      throw new ClickMeException("Email verification failed");
     }
 
     const token = generateToken(user);

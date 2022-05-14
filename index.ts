@@ -1,13 +1,15 @@
 import express, { Express, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
-import { ClickMeException } from "./utils/exception";
 import router from "./routes/routes";
 import dbInit from "./database/init";
 import * as handler from "./utils/handler";
+import { initPassport } from "./utils/auth";
+import passport from "passport";
 
 dotenv.config();
 
 dbInit();
+initPassport();
 
 function middleware1(req: Request, res: Response, next: NextFunction) {
   // perform middleware function e.g. check if user is authenticated
@@ -30,6 +32,9 @@ const getApp = () => {
       extended: true
     })
   );
+
+  //initialize passport
+  app.use(passport.initialize());
 
   app.get("/", middleware1, (req: Request, res: Response) => {
     // throw new ClickMeException("asdd", "asdq", "asds")

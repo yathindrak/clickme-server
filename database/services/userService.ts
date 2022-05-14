@@ -8,8 +8,8 @@ export const create = (payload: UserInput): Promise<IUser> => {
 
 export const update = (
   id: number,
-  payload: Partial<UserInput>
-): Promise<IUser> => {
+  payload: any
+): Promise<void> => {
   return userDal.update(id, payload);
 };
 
@@ -23,6 +23,10 @@ export const getByEmail = (email: string): Promise<IUser> => {
 
 export const getByEmailVerificationCode = (verificationCode: string): Promise<IUser> => {
   return userDal.getByEmailVerificationCode(verificationCode);
+};
+
+export const getByApiKey = (apikey: string): Promise<IUser> => {
+  return userDal.getByApiKey(apikey);
 };
 
 export const deleteById = (id: number): Promise<boolean> => {
